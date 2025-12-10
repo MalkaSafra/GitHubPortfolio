@@ -1,0 +1,12 @@
+C:\practicode\GitHubPortfolio\Portfolio.Services\bin\Debug\net9.0\Portfolio.Services.deps.json
+C:\practicode\GitHubPortfolio\Portfolio.Services\bin\Debug\net9.0\Portfolio.Services.dll
+C:\practicode\GitHubPortfolio\Portfolio.Services\bin\Debug\net9.0\Portfolio.Services.pdb
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.csproj.AssemblyReference.cache
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.GeneratedMSBuildEditorConfig.editorconfig
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.AssemblyInfoInputs.cache
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.AssemblyInfo.cs
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.csproj.CoreCompileInputs.cache
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.dll
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\refint\Portfolio.Services.dll
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\Portfolio.Services.pdb
+C:\practicode\GitHubPortfolio\Portfolio.Services\obj\Debug\net9.0\ref\Portfolio.Services.dll

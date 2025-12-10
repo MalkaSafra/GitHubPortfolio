@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Octokit;
+using Microsoft.Extensions.Options;
+namespace Portfolio.Services
+{
+    
+
+    public class GitHubService : IGitHubService
+    {
+        private readonly GitHubClient _client;
+        private readonly GitHubSettings _settings;
+
+        public GitHubService(IOptions<GitHubSettings> options)
+        {
+            _settings = options.Value;
+            _client = new GitHubClient(new ProductHeaderValue("MyPortfolioApp"));
+            _client.Credentials = new Credentials(_settings.Token);
+        }
+
+        public async Task<List<PortfolioItem>> GetPortfolioAsync()
+        {
+            // שליפת הריפוזיטוריז של המשתמש מההגדרות
+            var repos = await _client.Repository.GetAllForUser(_settings.Username);
+
+            // המרה לרשימה שלנו
+            return repos.Select(repo => new PortfolioItem
+            {
+                Name = repo.Name,
+                Language = repo.Language,
+                Stars = repo.StargazersCount,
+                LastCommit = repo.PushedAt, // PushedAt הוא אינדיקטור טוב לפעילות אחרונה
+                Url = repo.HtmlUrl
+            }).ToList();
+        }
+
+        public async Task<List<PortfolioItem>> SearchRepositoriesAsync(string name, string language, string user)
+        {
+            // בניית בקשת החיפוש
+            var request = new SearchRepositoriesRequest(name)
+            {
+                User = user
+            };
+
+            if (!string.IsNullOrEmpty(language))
+            {
+                if (Enum.TryParse(language, true, out Language langEnum))
+                {
+                    request.Language = langEnum;
+                }
+            }
+
+            var result = await _client.Search.SearchRepo(request);
+
+            return result.Items.Select(repo => new PortfolioItem
+            {
+                Name = repo.Name,
+                Language = repo.Language.ToString(),
+                Stars = repo.StargazersCount,
+                LastCommit = repo.PushedAt,
+                Url = repo.HtmlUrl
+            }).ToList();
+        }
+    }
+}

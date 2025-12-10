@@ -1,0 +1,77 @@
+﻿// Ensure you have the following NuGet package installed in your project:
+// Microsoft.Extensions.Options
+
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options; // This requires the Microsoft.Extensions.Options NuGet package.
+using Octokit;
+using Portfolio.Services;
+
+public class CachedGitHubService : IGitHubService
+{
+    private readonly IGitHubService _innerService; // השירות המקורי
+    private readonly IMemoryCache _cache;
+    private readonly GitHubClient _clientForEvents; // קליינט נפרד רק לבדיקת אירועים
+    private readonly GitHubSettings _settings;
+
+    private const string CacheKey = "PortfolioData";
+    private const string LastUpdateKey = "PortfolioLastUpdate";
+
+    public CachedGitHubService(IGitHubService innerService, IMemoryCache cache, IOptions<GitHubSettings> options)
+    {
+        _innerService = innerService;
+        _cache = cache;
+        _settings = options.Value;
+        _clientForEvents = new GitHubClient(new ProductHeaderValue("CacheChecker"))
+        {
+            Credentials = new Credentials(_settings.Token)
+        };
+    }
+
+    public async Task<List<PortfolioItem>> GetPortfolioAsync()
+    {
+        bool shouldRefresh = false;
+
+        // 1. בדיקה אם המידע קיים בכלל ב-Cache
+        if (!_cache.TryGetValue(CacheKey, out List<PortfolioItem> cachedData))
+        {
+            shouldRefresh = true;
+        }
+        else
+        {
+            // 2. המידע קיים, אבל האם הוא מעודכן? נבדוק מול גיטהאב את הפעולה האחרונה
+            // נשלוף את האירוע האחרון של המשתמש (Events)
+            var events = await _clientForEvents.Activity.Events.GetAllUserPerformed(_settings.Username);
+            var lastEvent = events.FirstOrDefault();
+
+            if (lastEvent != null)
+            {
+                // נבדוק מתי שמרנו בפעם האחרונה את המידע ב-Cache
+                var lastCacheTime = _cache.Get<DateTimeOffset?>(LastUpdateKey);
+
+                // אם האירוע בגיטהאב קרה *אחרי* הפעם האחרונה ששמרנו ב-Cache -> צריך לרענן!
+                if (lastCacheTime == null || lastEvent.CreatedAt > lastCacheTime)
+                {
+                    shouldRefresh = true;
+                }
+            }
+        }
+
+        if (shouldRefresh)
+        {
+            // קריאה לשירות האמיתי לשליפת המידע הכבד
+            cachedData = await _innerService.GetPortfolioAsync();
+
+            // שמירה ב-Cache
+            _cache.Set(CacheKey, cachedData);
+            _cache.Set(LastUpdateKey, DateTimeOffset.Now); // מתעדים מתי שמרנו
+        }
+
+        return cachedData;
+    }
+
+    public async Task<List<PortfolioItem>> SearchRepositoriesAsync(string name, string language, string user)
+    {
+        // חיפוש לא שומרים ב-Cache בדרך כלל
+        return await _innerService.SearchRepositoriesAsync(name, language, user);
+    }
+}
